@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#2563eb" />
+  <title>업무 체크리스트</title>
+  <style>
+    :root {
+      --blue:#2563eb; --blue-light:#dbeafe; --green:#16a34a; --yellow:#ca8a04;
+      --red:#dc2626; --gray:#6b7280; --bg:#f3f4f6; --card:#ffffff; --line:#e5e7eb;
+      --text:#111827; --muted:#6b7280; --radius:18px;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", Arial, sans-serif; background:var(--bg); color:var(--text); }
+    button, input, textarea, select { font:inherit; }
+    button { cursor:pointer; border:0; }
+    .app { min-height:100vh; display:flex; }
+    .sidebar { width:240px; background:#fff; border-right:1px solid var(--line); padding:24px 16px; position:sticky; top:0; height:100vh; overflow-y:auto; }
+    .brand { font-size:22px; font-weight:800; margin-bottom:22px; display:flex; gap:8px; align-items:center; }
+    .nav button { width:100%; text-align:left; padding:13px 14px; border-radius:14px; margin-bottom:8px; background:transparent; color:#374151; font-weight:650; }
+    .nav button.active { background:var(--blue); color:#fff; }
+    .main { flex:1; padding:24px 28px 96px; max-width:1280px; margin:0 auto; width:100%; }
+    .topbar { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:20px; }
+    .title h1 { margin:0; font-size:28px; }
+    .title p { margin:6px 0 0; color:var(--muted); }
+    .search { min-width:280px; padding:12px 14px; border:1px solid var(--line); border-radius:14px; background:#fff; }
+    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .grid2 { display:grid; grid-template-columns:1.1fr .9fr; gap:14px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:0 6px 18px rgba(0,0,0,.04); }
+    .stat strong { display:block; font-size:27px; margin-top:6px; }
+    .stat span { color:var(--muted); font-size:14px; }
+    .section-title { font-size:18px; font-weight:800; margin:0 0 14px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .btn { background:var(--blue); color:#fff; padding:11px 14px; border-radius:13px; font-weight:700; }
+    .btn.secondary { background:#f3f4f6; color:#111827; border:1px solid var(--line); }
+    .btn.danger { background:var(--red); color:#fff; }
+    .btn.small { padding:7px 10px; border-radius:10px; font-size:13px; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .input, .textarea, .select { width:100%; padding:12px 13px; border:1px solid var(--line); border-radius:13px; background:#fff; }
+    .textarea { min-height:90px; resize:vertical; }
+    .form-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .task { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; border:1px solid var(--line); border-radius:15px; padding:13px; margin-bottom:10px; background:#fff; }
+    .task-left { display:flex; gap:11px; align-items:flex-start; flex:1; min-width:0; }
+    .check { width:26px; height:26px; border-radius:8px; border:2px solid #cbd5e1; display:grid; place-items:center; flex:0 0 auto; background:#fff; color:#fff; }
+    .check.done { background:var(--green); border-color:var(--green); }
+    .task-title { font-weight:800; word-break:break-word; }
+    .task-title.done { text-decoration:line-through; color:var(--muted); }
+    .meta { color:var(--muted); font-size:13px; margin-top:5px; display:flex; flex-wrap:wrap; gap:6px; }
+    .badge { padding:4px 8px; border-radius:999px; background:#f3f4f6; color:#374151; font-size:12px; font-weight:700; }
+    .badge.todo { background:#eff6ff; color:#1d4ed8; }
+    .badge.progress { background:#fef3c7; color:#92400e; }
+    .badge.done { background:#dcfce7; color:#166534; }
+    .badge.hold { background:#fee2e2; color:#991b1b; }
+    .calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+    .dayname { text-align:center; color:var(--muted); font-size:13px; font-weight:800; padding:8px 0; }
+    .day { min-height:105px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:8px; cursor:pointer; }
+    .day.today { border:2px solid var(--blue); }
+    .day.muted { opacity:.35; }
+    .day-num { font-weight:800; margin-bottom:6px; }
+    .mini-task { font-size:12px; padding:4px 6px; border-radius:8px; background:var(--blue-light); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .tabs button { padding:9px 12px; border-radius:999px; background:#f3f4f6; color:#374151; font-weight:700; }
+    .tabs button.active { background:var(--blue); color:#fff; }
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.42); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+    .modal-backdrop.show { display:flex; }
+    .modal { width:min(780px,100%); max-height:90vh; overflow:auto; background:#fff; border-radius:22px; padding:20px; }
+    .bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--line); z-index:30; padding:8px 8px calc(8px + env(safe-area-inset-bottom)); }
+    .bottom-nav button { flex:1; padding:9px 4px; border-radius:14px; background:transparent; font-size:12px; font-weight:800; color:#6b7280; }
+    .bottom-nav button.active { background:var(--blue-light); color:#1d4ed8; }
+    .empty { color:var(--muted); padding:18px; background:#f9fafb; border-radius:14px; text-align:center; }
+    .progressbar { height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; margin-top:10px; }
+    .progressbar div { height:100%; background:var(--blue); width:0%; }
+    .weekly-cols { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+    .weekly-col { background:#f9fafb; border:1px solid var(--line); border-radius:16px; padding:12px; min-height:180px; }
+    .weekly-col h3 { margin:0 0 10px; font-size:15px; }
+
+    /* ── 저장 상태 표시 ── */
+    #save-status {
+      position:fixed; top:14px; right:18px; z-index:100;
+      padding:8px 14px; border-radius:999px; font-size:13px; font-weight:700;
+      box-shadow:0 2px 10px rgba(0,0,0,.15); transition:opacity .4s;
+      pointer-events:none;
+    }
+    #save-status.ok    { background:#dcfce7; color:#166534; }
+    #save-status.fail  { background:#fee2e2; color:#991b1b; }
+    #save-status.sync  { background:#fef3c7; color:#92400e; }
+    #save-status.hide  { opacity:0; }
+
+    /* ── 초기 로딩 오버레이 ── */
+    #loading-overlay {
+      position:fixed; inset:0; background:#fff; display:flex;
+      align-items:center; justify-content:center; z-index:200;
+      flex-direction:column; gap:14px;
+    }
+    #loading-overlay .spinner {
+      width:40px; height:40px; border:4px solid var(--line);
+      border-top-color:var(--blue); border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    @media (max-width: 900px) {
+      .sidebar { display:none; }
+      .main { padding:18px 14px 90px; }
+      .topbar { align-items:flex-start; flex-direction:column; }
+      .search { min-width:0; width:100%; }
+      .grid { grid-template-columns:repeat(2,1fr); }
+      .grid2, .form-grid, .weekly-cols { grid-template-columns:1fr; }
+      .bottom-nav { display:flex; }
+      .title h1 { font-size:24px; }
+      .calendar { gap:5px; }
+      .day { min-height:72px; padding:6px; }
+      .mini-task { display:none; }
+      .task { padding:14px 12px; }
+      .btn { padding:12px 14px; }
+      #save-status { top:auto; bottom:72px; right:12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 초기 로딩 오버레이 -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div style="font-weight:700;color:var(--muted)">서버에서 데이터를 불러오는 중...</div>
+</div>
+
+<!-- 저장 상태 표시 -->
+<div id="save-status" class="hide"></div>
+
+<div id="app"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  유틸
+// ════════════════════════════════════════════════════════════
+const STORAGE_KEY = "work_routine_backup_v2";
+const todayISO = () => new Date().toISOString().slice(0,10);
+const addDays = (date, n) => { const d = new Date(date); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const fmt = (iso) => iso ? iso.replaceAll("-",".") : "";
+const uid = () => "id_" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+
+function escapeHtml(s) { return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
+
+// ════════════════════════════════════════════════════════════
+//  저장 상태 UI
+// ════════════════════════════════════════════════════════════
+let statusTimer = null;
+function showStatus(type, msg) {
+  const el = document.getElementById("save-status");
+  el.className = type;
+  el.textContent = msg;
+  if (statusTimer) clearTimeout(statusTimer);
+  if (type === "ok") {
+    statusTimer = setTimeout(() => { el.className = "hide"; }, 2000);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  서버 API 레이어
+// ════════════════════════════════════════════════════════════
+let serverOnline = true;
+let pendingSync = false;
+
+async function apiFetch(method, path, body) {
+  try {
+    const opts = { method, headers: { "Content-Type": "application/json" } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(path, opts);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    serverOnline = true;
+    return await res.json();
+  } catch (e) {
+    serverOnline = false;
+    throw e;
+  }
+}
+
+// 서버에서 전체 데이터 불러오기
+async function loadFromServer() {
+  try {
+    const data = await apiFetch("GET", "/api/data");
+    serverOnline = true;
+    return data;
+  } catch {
+    serverOnline = false;
+    return null;
+  }
+}
+
+// localStorage 백업
+function saveLocalBackup(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
+function loadLocalBackup() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; } catch { return null; }
+}
+
+// 공통 저장 함수: 서버 우선, 실패 시 로컬 백업
+async function saveToServer(method, path, body) {
+  try {
+    await apiFetch(method, path, body);
+    showStatus("ok", "✅ 저장 완료");
+    saveLocalBackup(state);
+    pendingSync = false;
+  } catch {
+    showStatus("fail", "⚠️ 서버 연결 실패, 임시 저장 중");
+    saveLocalBackup(state);
+    pendingSync = true;
+  }
+}
+
+// 서버 복구 시 임시 저장 데이터 동기화
+async function trySyncIfNeeded() {
+  if (!pendingSync) return;
+  try {
+    await apiFetch("POST", "/api/data", state);
+    showStatus("ok", "🔄 서버 동기화 완료");
+    saveLocalBackup(state);
+    pendingSync = false;
+  } catch {}
+}
+
+// ════════════════════════════════════════════════════════════
+//  앱 상태
+// ════════════════════════════════════════════════════════════
+let state = { tasks: [], records: [], templates: [] };
+let currentView = "home";
+let query = "";
+let selectedDate = todayISO();
+let currentMonth = new Date();
+let modalTaskId = null;
+let modalTab = "basic";
+
+// ════════════════════════════════════════════════════════════
+//  초기화: 서버 데이터 로드
+// ════════════════════════════════════════════════════════════
+(async function init() {
+  const serverData = await loadFromServer();
+  if (serverData) {
+    state = serverData;
+    saveLocalBackup(state);
+    showStatus("ok", "✅ 서버 연결됨");
+  } else {
+    // 서버 실패 → 로컬 백업 사용
+    const backup = loadLocalBackup();
+    if (backup) {
+      state = backup;
+      pendingSync = true;
+      showStatus("fail", "⚠️ 서버 연결 실패, 임시 저장 중");
+    } else {
+      showStatus("fail", "⚠️ 서버 연결 실패");
+    }
+  }
+  document.getElementById("loading-overlay").style.display = "none";
+  render();
+
+  // 30초마다 서버 복구 시도
+  setInterval(trySyncIfNeeded, 30000);
+})();
+
+// ════════════════════════════════════════════════════════════
+//  데이터 조작 함수 (모두 서버 API 호출)
+// ════════════════════════════════════════════════════════════
+const statusLabel = { "예정":"todo", "진행중":"progress", "완료":"done", "보류":"hold" };
+
+function filteredTasks() {
+  const q = query.trim().toLowerCase();
+  if (!q) return state.tasks;
+  return state.tasks.filter(t => [t.title,t.category,t.memo,t.procedure,t.nextNote].join(" ").toLowerCase().includes(q));
+}
+function tasksByDate(date) { return filteredTasks().filter(t => t.date === date); }
+function todayTasks() { return tasksByDate(todayISO()); }
+function weekRange() {
+  const d = new Date(), day = d.getDay();
+  const monday = new Date(d); monday.setDate(d.getDate() - ((day + 6) % 7));
+  const arr = [];
+  for (let i=0;i<7;i++){ const x = new Date(monday); x.setDate(monday.getDate()+i); arr.push(x.toISOString().slice(0,10)); }
+  return arr;
+}
+function weekTasks() { const wr = weekRange(); return filteredTasks().filter(t => wr.includes(t.date)); }
+function monthTasks() {
+  const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
+  return filteredTasks().filter(t => { const d=new Date(t.date); return d.getFullYear()===y && d.getMonth()===m; });
+}
+function completionRate(tasks) {
+  if (!tasks.length) return 0;
+  return Math.round(tasks.filter(t => t.status === "완료").length / tasks.length * 100);
+}
+function checklistRate(t) {
+  if (!t.checklist?.length) return 0;
+  return Math.round(t.checklist.filter(c=>c.done).length / t.checklist.length * 100);
+}
+
+function setView(v) { currentView = v; render(); }
+
+async function updateTask(id, patch) {
+  state.tasks = state.tasks.map(t => t.id === id ? {...t, ...patch} : t);
+  render();
+  await saveToServer("PUT", `/api/tasks/${id}`, patch);
+}
+
+async function deleteTask(id) {
+  if (!confirm("이 업무를 삭제할까요?")) return;
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  if (modalTaskId === id) modalTaskId = null;
+  render();
+  await saveToServer("DELETE", `/api/tasks/${id}`);
+}
+
+async function completeTask(id) {
+  const task = state.tasks.find(t => t.id === id);
+  if (!task) return;
+  const wasComplete = task.status === "완료";
+  task.status = wasComplete ? "진행중" : "완료";
+  let newRecord = null;
+  if (task.status === "완료") {
+    newRecord = {
+      id: uid(), taskId: task.id, title: task.title, date: todayISO(), category: task.category,
+      result: task.log || "업무 완료", procedure: task.procedure,
+      checklist: task.checklist.map(c=>c.text), nextNote: task.nextNote
+    };
+    state.records.unshift(newRecord);
+  }
+  render();
+  await saveToServer("PUT", `/api/tasks/${id}`, { status: task.status });
+  if (newRecord) {
+    await saveToServer("POST", "/api/records", newRecord);
+  }
+}
+
+async function addTaskFromForm(formId, forcedDate) {
+  const form = document.getElementById(formId);
+  const fd = new FormData(form);
+  const title = (fd.get("title") || "").trim();
+  if (!title) return alert("업무명을 입력하세요.");
+  const newTask = {
+    id: uid(), title, date: forcedDate || fd.get("date") || todayISO(),
+    category: fd.get("category") || "공통", priority: fd.get("priority") || "중",
+    status: fd.get("status") || "예정", repeat: fd.get("repeat") || "없음",
+    memo: fd.get("memo") || "", links:"", procedure: fd.get("procedure") || "", log:"", nextNote:"",
+    checklist: (fd.get("checklist") || "").split("\n").filter(Boolean).map(x => ({id:uid(), text:x.trim(), done:false}))
+  };
+  state.tasks.push(newTask);
+  form.reset();
+  render();
+  await saveToServer("POST", "/api/tasks", newTask);
+}
+
+async function toggleCheck(taskId, checkId) {
+  const t = state.tasks.find(x=>x.id===taskId);
+  const c = t.checklist.find(x=>x.id===checkId);
+  c.done = !c.done;
+  render();
+  await saveToServer("PUT", `/api/tasks/${taskId}/checklist/${checkId}`, { done: c.done });
+}
+
+async function editCheck(taskId, checkId, val) {
+  const t = state.tasks.find(x=>x.id===taskId);
+  const c = t.checklist.find(x=>x.id===checkId);
+  c.text = val;
+  await saveToServer("PUT", `/api/tasks/${taskId}/checklist/${checkId}`, { text: val });
+}
+
+async function removeCheck(taskId, checkId) {
+  const t = state.tasks.find(x=>x.id===taskId);
+  t.checklist = t.checklist.filter(x=>x.id!==checkId);
+  render();
+  // 체크리스트 포함 전체 task 업데이트
+  await saveToServer("PUT", `/api/tasks/${taskId}`, { checklist: t.checklist });
+}
+
+async function addCheck(taskId) {
+  const input = document.getElementById("newCheck");
+  if (!input.value.trim()) return;
+  const t = state.tasks.find(x=>x.id===taskId);
+  const newItem = {id:uid(), text:input.value.trim(), done:false};
+  t.checklist.push(newItem);
+  render();
+  await saveToServer("PUT", `/api/tasks/${taskId}`, { checklist: t.checklist });
+}
+
+async function saveTemplateFromTask(id) {
+  const t = state.tasks.find(x=>x.id===id); if (!t) return;
+  const tpl = {
+    id: uid(), title: t.title, category: t.category, repeat: t.repeat,
+    checklist: t.checklist.map(c=>c.text), procedure: t.procedure,
+    caution: t.nextNote || "다음 처리 시 확인 필요"
+  };
+  state.templates.unshift(tpl);
+  alert("반복업무 템플릿으로 저장했습니다.");
+  render();
+  await saveToServer("POST", "/api/templates", tpl);
+}
+
+async function createTaskFromTemplate(id) {
+  const tpl = state.templates.find(x=>x.id===id); if (!tpl) return;
+  const newTask = {
+    id: uid(), title: tpl.title, date: selectedDate || todayISO(), category: tpl.category,
+    priority:"중", status:"예정", repeat:tpl.repeat, memo:"템플릿에서 생성", links:"",
+    checklist: tpl.checklist.map(x=>({id:uid(), text:x, done:false})),
+    procedure: tpl.procedure, log:"", nextNote: tpl.caution
+  };
+  state.tasks.push(newTask);
+  alert("선택한 날짜에 업무를 생성했습니다.");
+  render();
+  await saveToServer("POST", "/api/tasks", newTask);
+}
+
+// ════════════════════════════════════════════════════════════
+//  렌더링
+// ════════════════════════════════════════════════════════════
+function navHtml() {
+  const items = [["home","홈"],["today","오늘"],["month","월간"],["week","주간"],["records","기록"],["templates","템플릿"]];
+  return items.map(([v,l]) => `<button class="${currentView===v?'active':''}" onclick="setView('${v}')">${l}</button>`).join("");
+}
+
+function taskCard(t) {
+  return `
+    <div class="task">
+      <div class="task-left">
+        <button class="check ${t.status==='완료'?'done':''}" onclick="completeTask('${t.id}')">${t.status==='완료'?'✓':''}</button>
+        <div>
+          <div class="task-title ${t.status==='완료'?'done':''}" onclick="openTask('${t.id}')" style="cursor:pointer">${escapeHtml(t.title)}</div>
+          <div class="meta">
+            <span class="badge ${statusLabel[t.status]||''}">${t.status}</span>
+            <span class="badge">${fmt(t.date)}</span>
+            <span class="badge">${t.category}</span>
+            <span class="badge">중요도 ${t.priority}</span>
+            ${t.repeat && t.repeat !== "없음" ? `<span class="badge">반복 ${t.repeat}</span>` : ""}
+            <span class="badge">체크 ${checklistRate(t)}%</span>
+          </div>
+          ${t.memo ? `<div class="meta">${escapeHtml(t.memo)}</div>` : ""}
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn small secondary" onclick="openTask('${t.id}')">상세</button>
+        <button class="btn small danger" onclick="deleteTask('${t.id}')">삭제</button>
+      </div>
+    </div>
+  `;
+}
+
+function statsHtml(tt=todayTasks(), wt=weekTasks(), mt=monthTasks()) {
+  return `
+    <div class="grid">
+      <div class="card stat"><span>오늘 완료율</span><strong>${completionRate(tt)}%</strong><div class="progressbar"><div style="width:${completionRate(tt)}%"></div></div></div>
+      <div class="card stat"><span>오늘 업무</span><strong>${tt.length}</strong></div>
+      <div class="card stat"><span>이번 주 업무</span><strong>${wt.length}</strong></div>
+      <div class="card stat"><span>이번 달 업무</span><strong>${mt.length}</strong></div>
+    </div>
+  `;
+}
+
+function taskForm(id, forcedDate="") {
+  return `
+    <form id="${id}" onsubmit="event.preventDefault(); addTaskFromForm('${id}', '${forcedDate}')">
+      <div class="form-grid">
+        <input class="input" name="title" placeholder="업무명" required />
+        ${forcedDate ? `<input class="input" value="${fmt(forcedDate)}" disabled />` : `<input class="input" type="date" name="date" value="${selectedDate || todayISO()}" />`}
+        <input class="input" name="category" placeholder="카테고리 예: 인사/총무/보고" />
+        <select class="select" name="priority"><option>상</option><option selected>중</option><option>하</option></select>
+        <select class="select" name="status"><option>예정</option><option>진행중</option><option>보류</option><option>완료</option></select>
+        <select class="select" name="repeat"><option>없음</option><option>매일</option><option>매주</option><option>매월</option><option>특정 날짜</option></select>
+      </div>
+      <textarea class="textarea" name="checklist" placeholder="체크리스트를 줄바꿈으로 입력&#10;예: 자료 요청&#10;파일 검산&#10;결재 상신" style="margin-top:10px"></textarea>
+      <textarea class="textarea" name="procedure" placeholder="처리절차 / 업무 방식" style="margin-top:10px"></textarea>
+      <textarea class="textarea" name="memo" placeholder="메모" style="margin-top:10px"></textarea>
+      <button class="btn" style="margin-top:10px;width:100%">업무 추가</button>
+    </form>
+  `;
+}
+
+function homeView() {
+  const tt = todayTasks(), wt = weekTasks(), mt = monthTasks();
+  const due = filteredTasks().filter(t => t.status !== "완료" && t.date >= todayISO()).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5);
+  return `
+    ${statsHtml(tt, wt, mt)}
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h2 class="section-title">오늘 해야 할 일 <button class="btn small" onclick="setView('today')">오늘 업무로 이동</button></h2>
+        ${tt.length ? tt.map(taskCard).join("") : `<div class="empty">오늘 등록된 업무가 없습니다.</div>`}
+      </div>
+      <div class="card">
+        <h2 class="section-title">마감 임박 업무</h2>
+        ${due.length ? due.map(taskCard).join("") : `<div class="empty">마감 임박 업무가 없습니다.</div>`}
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2 class="section-title">최근 업무 기록</h2>
+      ${state.records.slice(0,5).map(r=>`<div class="task"><div><b>${escapeHtml(r.title)}</b><div class="meta">${fmt(r.date)} · ${r.category} · ${escapeHtml(r.result)}</div></div></div>`).join("") || `<div class="empty">아직 업무 기록이 없습니다.</div>`}
+    </div>
+  `;
+}
+
+function todayView() {
+  return `
+    ${statsHtml()}
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h2 class="section-title">마이루틴식 오늘 업무</h2>
+        ${todayTasks().length ? todayTasks().map(taskCard).join("") : `<div class="empty">오늘 할 일을 추가해보세요.</div>`}
+      </div>
+      <div class="card">
+        <h2 class="section-title">빠른 업무 추가</h2>
+        ${taskForm("todayForm", todayISO())}
+      </div>
+    </div>
+  `;
+}
+
+function monthView() {
+  const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
+  const first = new Date(y,m,1), last = new Date(y,m+1,0);
+  const startDay = first.getDay();
+  let cells = [];
+  for (let i=0; i<startDay; i++) cells.push(null);
+  for (let d=1; d<=last.getDate(); d++) cells.push(new Date(y,m,d));
+  const days = ["일","월","화","수","목","금","토"];
+  return `
+    <div class="card">
+      <h2 class="section-title">
+        <span>${y}년 ${m+1}월 월간 캘린더</span>
+        <span class="row">
+          <button class="btn small secondary" onclick="currentMonth.setMonth(currentMonth.getMonth()-1); render()">이전</button>
+          <button class="btn small secondary" onclick="currentMonth=new Date(); render()">이번달</button>
+          <button class="btn small secondary" onclick="currentMonth.setMonth(currentMonth.getMonth()+1); render()">다음</button>
+        </span>
+      </h2>
+      <div class="calendar">
+        ${days.map(d=>`<div class="dayname">${d}</div>`).join("")}
+        ${cells.map(d => {
+          if (!d) return `<div class="day muted"></div>`;
+          const iso = d.toISOString().slice(0,10);
+          const list = tasksByDate(iso);
+          return `<div class="day ${iso===todayISO()?'today':''}" onclick="selectedDate='${iso}'; render()">
+            <div class="day-num">${d.getDate()}</div>
+            ${list.slice(0,3).map(t=>`<div class="mini-task">${escapeHtml(t.title)}</div>`).join("")}
+            ${list.length>3 ? `<div class="mini-task">+${list.length-3}</div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h2 class="section-title">${fmt(selectedDate)} 업무</h2>
+        ${tasksByDate(selectedDate).length ? tasksByDate(selectedDate).map(taskCard).join("") : `<div class="empty">선택한 날짜의 업무가 없습니다.</div>`}
+      </div>
+      <div class="card">
+        <h2 class="section-title">선택 날짜에 업무 추가</h2>
+        ${taskForm("monthForm", selectedDate)}
+      </div>
+    </div>
+  `;
+}
+
+function weekView() {
+  const groups = [
+    ["핵심 업무", t => t.priority==="상"],
+    ["마감 업무", t => t.date <= addDays(todayISO(),2)],
+    ["미리 준비", t => t.status==="예정"],
+    ["확인 필요", t => t.status==="보류"],
+    ["완료/기록", t => t.status==="완료"]
+  ];
+  const wt = weekTasks();
+  return `
+    <div class="card">
+      <h2 class="section-title">이번 주 업무 계획</h2>
+      <div class="weekly-cols">
+        ${groups.map(([name,fn]) => `<div class="weekly-col"><h3>${name}</h3>${wt.filter(fn).map(t=>`<div class="task" onclick="openTask('${t.id}')" style="cursor:pointer"><div><b>${escapeHtml(t.title)}</b><div class="meta">${fmt(t.date)} · ${t.status}</div></div></div>`).join("") || `<div class="empty">없음</div>`}</div>`).join("")}
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2 class="section-title">이번 주 전체 업무</h2>
+      ${wt.length ? wt.map(taskCard).join("") : `<div class="empty">이번 주 업무가 없습니다.</div>`}
+    </div>
+  `;
+}
+
+function recordsView() {
+  return `
+    <div class="card">
+      <h2 class="section-title">업무 기록 / 업무 매뉴얼</h2>
+      ${state.records.length ? state.records.map(r=>`
+        <div class="task">
+          <div>
+            <div class="task-title">${escapeHtml(r.title)}</div>
+            <div class="meta">${fmt(r.date)} · ${r.category} · ${escapeHtml(r.result)}</div>
+            <details style="margin-top:8px"><summary>처리절차 / 다음 참고사항 보기</summary>
+              <pre style="white-space:pre-wrap;background:#f9fafb;padding:12px;border-radius:12px">${escapeHtml(r.procedure || "")}
+
+다음 참고사항: ${escapeHtml(r.nextNote || "")}</pre>
+            </details>
+          </div>
+        </div>`).join("") : `<div class="empty">완료된 업무 기록이 없습니다. 오늘 업무를 완료하면 자동 저장됩니다.</div>`}
+    </div>
+  `;
+}
+
+function templatesView() {
+  return `
+    <div class="card">
+      <h2 class="section-title">반복업무 템플릿</h2>
+      <p style="color:var(--muted);margin-top:-6px">템플릿을 누르면 현재 선택된 날짜(${fmt(selectedDate)})에 업무로 생성됩니다.</p>
+      ${state.templates.map(t=>`
+        <div class="task">
+          <div>
+            <div class="task-title">${escapeHtml(t.title)}</div>
+            <div class="meta">${t.category} · ${t.repeat}</div>
+            <details style="margin-top:8px"><summary>체크리스트 / 절차 보기</summary>
+              <pre style="white-space:pre-wrap;background:#f9fafb;padding:12px;border-radius:12px">${escapeHtml(t.checklist.join("\n"))}
+
+${escapeHtml(t.procedure)}
+주의: ${escapeHtml(t.caution)}</pre>
+            </details>
+          </div>
+          <button class="btn small" onclick="createTaskFromTemplate('${t.id}')">업무 생성</button>
+        </div>
+      `).join("") || `<div class="empty">저장된 템플릿이 없습니다.</div>`}
+    </div>
+  `;
+}
+
+function openTask(id) { modalTaskId = id; modalTab = "basic"; render(); }
+function closeModal() { modalTaskId = null; render(); }
+
+function taskModalHtml() {
+  const t = state.tasks.find(x=>x.id===modalTaskId);
+  if (!t) return "";
+  const tabs = [["basic","기본정보"],["check","체크리스트"],["procedure","처리절차"],["log","업무기록"],["next","다음 참고사항"]];
+  let body = "";
+  if (modalTab==="basic") body = `
+    <div class="form-grid">
+      <input class="input" value="${escapeAttr(t.title)}" onchange="updateTask('${t.id}', {title:this.value})" />
+      <input class="input" type="date" value="${t.date}" onchange="updateTask('${t.id}', {date:this.value})" />
+      <input class="input" value="${escapeAttr(t.category)}" onchange="updateTask('${t.id}', {category:this.value})" />
+      <select class="select" onchange="updateTask('${t.id}', {priority:this.value})">${["상","중","하"].map(x=>`<option ${t.priority===x?'selected':''}>${x}</option>`).join("")}</select>
+      <select class="select" onchange="updateTask('${t.id}', {status:this.value})">${["예정","진행중","완료","보류"].map(x=>`<option ${t.status===x?'selected':''}>${x}</option>`).join("")}</select>
+      <select class="select" onchange="updateTask('${t.id}', {repeat:this.value})">${["없음","매일","매주","매월","특정 날짜"].map(x=>`<option ${t.repeat===x?'selected':''}>${x}</option>`).join("")}</select>
+    </div>
+    <textarea class="textarea" style="margin-top:10px" onchange="updateTask('${t.id}', {memo:this.value})">${escapeHtml(t.memo || "")}</textarea>
+  `;
+  if (modalTab==="check") body = `
+    ${(t.checklist||[]).map(c=>`
+      <div class="task">
+        <div class="task-left">
+          <button class="check ${c.done?'done':''}" onclick="toggleCheck('${t.id}','${c.id}')">${c.done?'✓':''}</button>
+          <input class="input" value="${escapeAttr(c.text)}" onchange="editCheck('${t.id}','${c.id}',this.value)" />
+        </div>
+        <button class="btn small danger" onclick="removeCheck('${t.id}','${c.id}')">삭제</button>
+      </div>`).join("")}
+    <div class="row"><input class="input" id="newCheck" placeholder="새 체크리스트" style="flex:1"><button class="btn" onclick="addCheck('${t.id}')">추가</button></div>
+  `;
+  if (modalTab==="procedure") body = `<textarea class="textarea" style="min-height:240px" onchange="updateTask('${t.id}', {procedure:this.value})">${escapeHtml(t.procedure || "")}</textarea>`;
+  if (modalTab==="log") body = `
+    <textarea class="textarea" style="min-height:180px" placeholder="처리 결과, 소요시간, 특이사항" onchange="updateTask('${t.id}', {log:this.value})">${escapeHtml(t.log || "")}</textarea>
+    <button class="btn" style="margin-top:10px" onclick="completeTask('${t.id}')">완료 처리 및 기록 저장</button>
+  `;
+  if (modalTab==="next") body = `
+    <textarea class="textarea" style="min-height:180px" placeholder="다음번 참고사항 / 주의사항 / 개선점" onchange="updateTask('${t.id}', {nextNote:this.value})">${escapeHtml(t.nextNote || "")}</textarea>
+    <button class="btn" style="margin-top:10px" onclick="saveTemplateFromTask('${t.id}')">반복업무 템플릿으로 저장</button>
+  `;
+  return `
+    <div class="modal-backdrop show" onclick="if(event.target.classList.contains('modal-backdrop')) closeModal()">
+      <div class="modal">
+        <h2 class="section-title"><span>${escapeHtml(t.title)}</span><button class="btn small secondary" onclick="closeModal()">닫기</button></h2>
+        <div class="tabs">${tabs.map(([k,l])=>`<button class="${modalTab===k?'active':''}" onclick="modalTab='${k}'; render()">${l}</button>`).join("")}</div>
+        ${body}
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  const viewMap = {home:homeView, today:todayView, month:monthView, week:weekView, records:recordsView, templates:templatesView};
+  document.getElementById("app").innerHTML = `
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">✅ 업무 체크리스트</div>
+        <div class="nav">${navHtml()}</div>
+        <div style="margin-top:auto;padding-top:20px;font-size:12px;color:var(--muted)">
+          ${serverOnline
+            ? `<span style="color:var(--green)">● 서버 연결됨</span>`
+            : `<span style="color:var(--red)">● 오프라인 (임시저장)</span>`}
+          ${pendingSync ? `<br><button class="btn small secondary" style="margin-top:8px;width:100%" onclick="trySyncIfNeeded()">지금 동기화</button>` : ""}
+        </div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="title">
+            <h1>${({home:"홈",today:"오늘 업무",month:"월간 캘린더",week:"주간 계획",records:"업무 기록",templates:"반복업무 템플릿"})[currentView]}</h1>
+            <p>마이루틴식 실행 UX + 노션식 정리 + 업무 표준화</p>
+          </div>
+          <input class="search" placeholder="업무 검색" value="${escapeAttr(query)}" oninput="query=this.value; render()" />
+        </div>
+        ${viewMap[currentView]()}
+      </main>
+    </div>
+    <nav class="bottom-nav">${[["home","홈"],["today","오늘"],["month","월간"],["week","주간"],["records","기록"]].map(([v,l])=>`<button class="${currentView===v?'active':''}" onclick="setView('${v}')">${l}</button>`).join("")}</nav>
+    ${taskModalHtml()}
+  `;
+}
+</script>
+</body>
+</html>

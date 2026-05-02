@@ -1,0 +1,37 @@
+{
+  "tasks": [
+    {
+      "id": "test_001",
+      "title": "테스트 업무",
+      "date": "2026-05-02",
+      "category": "테스트",
+      "priority": "중",
+      "status": "예정",
+      "repeat": "없음",
+      "memo": "",
+      "links": "",
+      "procedure": "",
+      "log": "",
+      "nextNote": "",
+      "checklist": []
+    }
+  ],
+  "records": [],
+  "templates": [
+    {
+      "id": "tpl_default_001",
+      "title": "월초 정산 업무",
+      "category": "정산",
+      "repeat": "매월",
+      "checklist": [
+        "자료 요청",
+        "전월 사용내역 확인",
+        "금액 검산",
+        "결재 상신",
+        "담당자 공유"
+      ],
+      "procedure": "1. 담당자별 자료 요청\n2. 취합 파일 작성\n3. 금액 검산\n4. 결재 상신\n5. 결과 공유",
+      "caution": "마감일 전날에는 반드시 미수신 자료를 재확인한다."
+    }
+  ]
+}
