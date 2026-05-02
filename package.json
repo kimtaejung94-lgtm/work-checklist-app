@@ -4,13 +4,12 @@
   "description": "업무 체크리스트 앱 - 서버 저장 방식",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": "20.x"
   }
 }
